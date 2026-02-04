@@ -24,11 +24,14 @@
       "inputs": {
         "host": {
           "connection": {
-            "name": "@parameters('$connections')['azureblob']['connectionId']"
+            "name": "@parameters('$connections')['azureblob-connection']['connectionId']"
           }
         },
         "method": "get",
         "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('stachfiledemo'))}/foldersV2/@{encodeURIComponent(encodeURIComponent('JTJmYWNoLWlucHV0'))}"
+      },
+      "metadata": {
+        "JTJmYWNoLWlucHV0": "/ach-input"
       }
     },
     "For_each_blob": {
@@ -40,7 +43,7 @@
           "inputs": {
             "host": {
               "connection": {
-                "name": "@parameters('$connections')['azureblob']['connectionId']"
+                "name": "@parameters('$connections')['azureblob-connection']['connectionId']"
               }
             },
             "method": "get",
@@ -118,7 +121,7 @@
               "inputs": {
                 "host": {
                   "connection": {
-                    "name": "@parameters('$connections')['azureblob']['connectionId']"
+                    "name": "@parameters('$connections')['azureblob-connection']['connectionId']"
                   }
                 },
                 "method": "post",
@@ -141,7 +144,7 @@
               "inputs": {
                 "host": {
                   "connection": {
-                    "name": "@parameters('$connections')['azureblob']['connectionId']"
+                    "name": "@parameters('$connections')['azureblob-connection']['connectionId']"
                   }
                 },
                 "method": "delete",
@@ -157,7 +160,7 @@
                 "inputs": {
                   "host": {
                     "connection": {
-                      "name": "@parameters('$connections')['azureblob']['connectionId']"
+                      "name": "@parameters('$connections')['azureblob-connection']['connectionId']"
                     }
                   },
                   "method": "post",
@@ -180,7 +183,7 @@
                 "inputs": {
                   "host": {
                     "connection": {
-                      "name": "@parameters('$connections')['azureblob']['connectionId']"
+                      "name": "@parameters('$connections')['azureblob-connection']['connectionId']"
                     }
                   },
                   "method": "delete",
