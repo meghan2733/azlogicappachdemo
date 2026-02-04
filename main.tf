@@ -96,6 +96,3 @@ data "azurerm_managed_api" "azureblob" {
   name     = "azureblob"
   location = azurerm_resource_group.ach_demo.location
 }
-
-# Data source for current Azure client config
-data "azurerm_client_config" "current" {}

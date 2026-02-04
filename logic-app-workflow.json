@@ -58,12 +58,15 @@
               "fileContent": "@{body('Get_blob_content')}",
               "fileName": "@{items('For_each_blob')?['Name']}",
               "validations": {
-                "recordLength": "@equals(length(split(body('Get_blob_content'), '\n')[0]), 94)",
-                "hasFileHeader": "@startsWith(split(body('Get_blob_content'), '\n')[0], '1')",
-                "hasBatchHeader": "@contains(body('Get_blob_content'), '\n5')",
-                "hasBatchControl": "@contains(body('Get_blob_content'), '\n8')",
-                "hasFileControl": "@contains(body('Get_blob_content'), '\n9')",
-                "recordCount": "@length(split(body('Get_blob_content'), '\n'))"
+                "lines": "@split(body('Get_blob_content'), '\n')",
+                "firstLine": "@first(split(body('Get_blob_content'), '\n'))",
+                "lastLine": "@last(split(body('Get_blob_content'), '\n'))",
+                "hasFileHeader": "@startsWith(first(split(body('Get_blob_content'), '\n')), '1')",
+                "hasFileControl": "@startsWith(last(split(body('Get_blob_content'), '\n')), '9')",
+                "hasBatchHeader": "@or(startsWith(split(body('Get_blob_content'), '\n')[1], '5'), startsWith(split(body('Get_blob_content'), '\n')[2], '5'))",
+                "hasBatchControl": "@greater(indexOf(body('Get_blob_content'), concat('\n', '8')), -1)",
+                "recordCount": "@length(split(body('Get_blob_content'), '\n'))",
+                "minRecordsMet": "@greaterOrEquals(length(split(body('Get_blob_content'), '\n')), 4)"
               }
             }
           },
@@ -84,6 +87,12 @@
                 },
                 {
                   "equals": [
+                    "@outputs('Validate_ACH_File')?['validations']?['hasFileControl']",
+                    true
+                  ]
+                },
+                {
+                  "equals": [
                     "@outputs('Validate_ACH_File')?['validations']?['hasBatchHeader']",
                     true
                   ]
@@ -96,14 +105,8 @@
                 },
                 {
                   "equals": [
-                    "@outputs('Validate_ACH_File')?['validations']?['hasFileControl']",
+                    "@outputs('Validate_ACH_File')?['validations']?['minRecordsMet']",
                     true
-                  ]
-                },
-                {
-                  "greaterOrEquals": [
-                    "@outputs('Validate_ACH_File')?['validations']?['recordCount']",
-                    4
                   ]
                 }
               ]

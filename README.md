@@ -22,12 +22,19 @@ The solution consists of:
 The Logic App validates ACH files based on NACHA format requirements:
 
 - **File Header Record (Type 1)**: Verifies the file starts with a record type '1'
-- **Batch Header Record (Type 5)**: Checks for presence of batch header
+- **Batch Header Record (Type 5)**: Checks for presence of batch header (in first few records)
 - **Entry Detail Records (Type 6)**: Validated as part of record count
 - **Batch Control Record (Type 8)**: Checks for presence of batch control
 - **File Control Record (Type 9)**: Verifies the file ends with a file control record
-- **Record Length**: Each record must be exactly 94 characters
 - **Minimum Records**: File must contain at least 4 records (file header, batch header, batch control, file control)
+
+**Note**: The Logic App provides basic validation using native Logic App expressions. For more comprehensive validation including:
+- Individual record length validation (94 characters each)
+- Field-level validation (routing numbers, account numbers, etc.)
+- Hash totals and control counts verification
+- Detailed error reporting
+
+Consider extending this solution with an Azure Function that performs detailed ACH file parsing and validation.
 
 ## Prerequisites
 
