@@ -92,7 +92,7 @@ resource "azurerm_resource_group_template_deployment" "ach_processor" {
     outputs = {
       logicAppUrl = {
         type = "string"
-        value = "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows', var.logic_app_name), '/triggers/manual'), '2019-05-01').value]"
+        value = "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows', 'logic-ach-processor'), '/triggers/manual'), '2019-05-01').value]"
       }
     }
   })
