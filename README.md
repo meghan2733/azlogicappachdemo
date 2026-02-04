@@ -25,16 +25,37 @@ The Logic App validates ACH files based on NACHA format requirements:
 - **Batch Header Record (Type 5)**: Checks for presence of batch header (in first few records)
 - **Entry Detail Records (Type 6)**: Validated as part of record count
 - **Batch Control Record (Type 8)**: Checks for presence of batch control
-- **File Control Record (Type 9)**: Verifies the file ends with a file control record
+- **File Control Record (Type 9)**: Verifies the file ends with a file control record (before any padding)
 - **Minimum Records**: File must contain at least 4 records (file header, batch header, batch control, file control)
 
-**Note**: The Logic App provides basic validation using native Logic App expressions. For more comprehensive validation including:
-- Individual record length validation (94 characters each)
-- Field-level validation (routing numbers, account numbers, etc.)
-- Hash totals and control counts verification
-- Detailed error reporting
+### Validation Limitations
 
-Consider extending this solution with an Azure Function that performs detailed ACH file parsing and validation.
+The Logic App provides **basic structural validation** using native Logic App expressions. This is suitable for initial file screening but has limitations:
+
+- Does not validate individual record lengths (94 characters each)
+- Does not verify field-level data (routing numbers, account numbers, amounts)
+- Does not validate hash totals and control counts
+- May not handle all edge cases (e.g., files with padding, malformed records)
+- Limited error reporting capabilities
+
+### Recommended Enhancements
+
+For production use in the insurance industry processing real ACH files, consider:
+
+1. **Azure Function Integration**: Add an Azure Function with a dedicated ACH parsing library that:
+   - Validates each record length (exactly 94 characters)
+   - Checks field formats and values (routing numbers, account types, etc.)
+   - Verifies batch and file control totals
+   - Provides detailed validation error messages
+   - Handles edge cases and malformed files
+
+2. **Azure Monitor**: Set up alerts for validation failures and processing errors
+
+3. **Compliance**: Implement audit logging for all file processing activities
+
+4. **Testing**: Thoroughly test with real ACH files from your insurance workflows
+
+**Example Architecture**: Logic App → Azure Function (validation) → Blob Storage (routing)
 
 ## Prerequisites
 

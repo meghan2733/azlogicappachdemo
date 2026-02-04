@@ -86,6 +86,8 @@ resource "azurerm_api_connection" "blob_connection" {
     accessKey   = azurerm_storage_account.ach_storage.primary_access_key
   }
 
+  # Azure may encrypt or modify connection parameters after creation
+  # Ignore changes to prevent Terraform from detecting drift
   lifecycle {
     ignore_changes = [parameter_values]
   }
