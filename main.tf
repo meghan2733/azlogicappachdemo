@@ -89,9 +89,9 @@ resource "azurerm_resource_group_template_deployment" "ach_processor" {
             parameters = {
             "$connections" = {
               value = {
-                "azureblob-connection" = {  # Match the actual connection name
-                  connectionId   = "[resourceId('Microsoft.Web/connections', 'azureblob-connection')]"
-                  connectionName = "azureblob-connection"
+                "azureblob_connection" = {  # Match the actual connection name
+                  connectionId   = "[resourceId('Microsoft.Web/connections', 'azureblob_connection')]"
+                  connectionName = "azureblob_connection"
                   id             = "[subscriptionResourceId('Microsoft.Web/locations/managedApis', resourceGroup().location, 'azureblob')]"
                 }
               }
@@ -121,9 +121,9 @@ resource "azurerm_resource_group_template_deployment" "ach_processor" {
 
 # API Connection for Azure Blob Storage
 resource "azurerm_api_connection" "blob_connection" {
-  name                = "azureblob-connection"
+  name                = "azureblob_connection"
   resource_group_name = azurerm_resource_group.ach_demo.name
-  managed_api_id      = data.azurerm_managed_api.azureblob.id
+  managed_api_id      = data.azurerm_managed_api.azureblob_connection.id
   display_name        = "Azure Blob Storage Connection"
 
   parameter_values = {
@@ -139,7 +139,7 @@ resource "azurerm_api_connection" "blob_connection" {
 }
 
 # Data source for Azure Blob managed API
-data "azurerm_managed_api" "azureblob-connection" {
-  name     = "azureblob-connection"
+data "azurerm_managed_api" "azureblob_connection" {
+  name     = "azureblob_connection"
   location = azurerm_resource_group.ach_demo.location
 }
