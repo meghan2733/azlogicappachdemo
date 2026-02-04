@@ -42,5 +42,9 @@ output "logic_app_id" {
 output "logic_app_access_endpoint" {
   description = "Logic App access endpoint URL"
   value       = azurerm_logic_app_workflow.ach_processor.access_endpoint
-  sensitive   = true
+}
+
+output "logic_app_callback_url" {
+  description = "Logic App Callback Url"
+  value     = jsondecode(azurerm_resource_group_template_deployment.logic_app.output_content).logicAppUrl.value
 }
