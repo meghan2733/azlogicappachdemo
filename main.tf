@@ -140,6 +140,6 @@ resource "azurerm_api_connection" "blob_connection" {
 
 # Data source for Azure Blob managed API
 data "azurerm_managed_api" "azureblob_connection" {
-  name     = "azureblob_connection"
+  name     = "azureblob"
   location = azurerm_resource_group.ach_demo.location
 }
