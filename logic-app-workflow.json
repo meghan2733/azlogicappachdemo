@@ -8,15 +8,7 @@
         "type": "Object"
       }
     },
-    "triggers": {
-      "Recurrence": {
-        "recurrence": {
-          "frequency": "Minute",
-          "interval": 3
-        },
-        "type": "Recurrence"
-      }
-    },
+    "triggers": {},
     "actions": {
       "List_blobs_in_input_container": {
         "runAfter": {},
