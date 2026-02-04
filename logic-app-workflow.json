@@ -8,7 +8,15 @@
         "type": "Object"
       }
     },
-    "triggers": {},
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Http",
+        "inputs": {
+          "schema": {}
+        }
+      }
+    },
     "actions": {
       "List_blobs_in_input_container": {
         "runAfter": {},
