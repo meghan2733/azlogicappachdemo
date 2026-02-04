@@ -29,22 +29,22 @@ output "blob_container_failed" {
   value       = azurerm_storage_container.ach_failed.name
 }
 
-output "logic_app_name" {
-  description = "Name of the Logic App"
-  value       = azurerm_logic_app_workflow.ach_processor.name
-}
+# output "logic_app_name" {
+#   description = "Name of the Logic App"
+#   value       = azurerm_resource_group_template_deployment.ach_processor.name
+# }
 
-output "logic_app_id" {
-  description = "ID of the Logic App"
-  value       = azurerm_logic_app_workflow.ach_processor.id
-}
+# output "logic_app_id" {
+#   description = "ID of the Logic App"
+#   value       = azurerm_resource_group_template_deployment.ach_processor.id
+# }
 
-output "logic_app_access_endpoint" {
-  description = "Logic App access endpoint URL"
-  value       = azurerm_logic_app_workflow.ach_processor.access_endpoint
-}
+# output "logic_app_access_endpoint" {
+#   description = "Logic App access endpoint URL"
+#   value       = azurerm_resource_group_template_deployment.ach_processor.access_endpoint
+# }
 
-output "logic_app_callback_url" {
-  description = "Logic App Callback Url"
-  value     = jsondecode(azurerm_resource_group_template_deployment.logic_app.output_content).logicAppUrl.value
-}
+# output "logic_app_callback_url" {
+#   description = "Logic App Callback Url"
+#   value     = jsondecode(azurerm_resource_group_template_deployment.ach_processor.output_content).logicAppUrl.value
+# }
