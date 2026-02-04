@@ -62,19 +62,6 @@ resource "azurerm_logic_app_workflow" "ach_processor" {
   name                = var.logic_app_name
   location            = azurerm_resource_group.ach_demo.location
   resource_group_name = azurerm_resource_group.ach_demo.name
-  
-  # Deploy the workflow definition
-  workflow_parameters = {
-    "$connections" = jsonencode({
-      value = {
-        azureblob = {
-          connectionId = azurerm_api_connection.blob_connection.id
-          connectionName = azurerm_api_connection.blob_connection.name
-          id = data.azurerm_managed_api.azureblob.id
-        }
-      }
-    })
-  }
 
   tags = var.tags
 }
