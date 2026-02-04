@@ -1,0 +1,156 @@
+name: Terraform Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+  workflow_dispatch:
+
+env:
+  TERRAFORM_VERSION: '1.5.0'
+#   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+#   ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+#   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+#   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  WORKING_DIR: '.'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform Plan and Apply
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: .
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+            terraform_version: ${{ env.TERRAFORM_VERSION }}
+      
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}
+        id: init
+        run: terraform init
+    
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+      
+      - name: Terraform Validate
+        working-directory: ${{ env.WORKING_DIR }}
+        id: validate
+        run: terraform validate -no-color
+      
+      - name: Terraform Plan
+        working-directory: ${{ env.WORKING_DIR }}
+        id: plan
+        run: terraform plan -no-color -out=tfplan
+        continue-on-error: false
+      
+      - name: Comment PR with Plan
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            
+            <details><summary>Show Plan</summary>
+            
+            \`\`\`terraform
+            ${{ steps.plan.outputs.stdout }}
+            \`\`\`
+            
+            </details>
+            
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+      
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform apply -auto-approve tfplan
+      
+      - name: Azure Logout
+        if: always()
+        run: az logout
+
+  terraform_cleanup:
+    name: 'Cleanup Terraform Locks'
+    runs-on: ubuntu-latest
+    needs: terraform
+    if: failure() || cancelled()  # Run only if the main job failed or was cancelled
+    
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Break Terraform State Lock
+        env:
+          AZ_STORAGE_ACCOUNT: ${{ vars.AZ_STORAGE_ACCOUNT }}
+          CONTAINER_NAME: "tfstate"
+          BLOB_NAME: "vm-infrastructure.terraform.tfstate"
+        run: |
+          echo "Checking if state file has an active lease..."
+          
+          # Check the current lease state
+          LEASE_STATE=$(az storage blob show \
+            --account-name $AZ_STORAGE_ACCOUNT \
+            --container-name $CONTAINER_NAME \
+            --name $BLOB_NAME \
+            --auth-mode login \
+            --query 'properties.lease.state' \
+            --output tsv 2>/dev/null || echo "unknown")
+          
+          echo "Current lease state: $LEASE_STATE"
+          
+          if [ "$LEASE_STATE" == "leased" ]; then
+            echo "State file is locked. Breaking the lease..."
+            az storage blob lease break \
+              --account-name $AZ_STORAGE_ACCOUNT \
+              --container-name $CONTAINER_NAME \
+              --blob-name $BLOB_NAME \
+              --auth-mode login
+            echo "Lease broken successfully"
+          else
+            echo "State file is not locked. No action needed."
+          fi
+        continue-on-error: true
