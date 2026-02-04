@@ -1,0 +1,203 @@
+{
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "Recurrence": {
+        "recurrence": {
+          "frequency": "Minute",
+          "interval": 3
+        },
+        "type": "Recurrence"
+      }
+    },
+    "actions": {
+      "List_blobs_in_input_container": {
+        "runAfter": {},
+        "type": "ApiConnection",
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['azureblob']['connectionId']"
+            }
+          },
+          "method": "get",
+          "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/foldersV2/@{encodeURIComponent(encodeURIComponent('JTJmYWNoLWlucHV0'))}"
+        }
+      },
+      "For_each_blob": {
+        "foreach": "@body('List_blobs_in_input_container')?['value']",
+        "actions": {
+          "Get_blob_content": {
+            "runAfter": {},
+            "type": "ApiConnection",
+            "inputs": {
+              "host": {
+                "connection": {
+                  "name": "@parameters('$connections')['azureblob']['connectionId']"
+                }
+              },
+              "method": "get",
+              "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files/@{encodeURIComponent(encodeURIComponent(items('For_each_blob')?['Path']))}/content"
+            }
+          },
+          "Validate_ACH_File": {
+            "runAfter": {
+              "Get_blob_content": [
+                "Succeeded"
+              ]
+            },
+            "type": "Compose",
+            "inputs": {
+              "fileContent": "@{body('Get_blob_content')}",
+              "fileName": "@{items('For_each_blob')?['Name']}",
+              "validations": {
+                "lines": "@split(body('Get_blob_content'), '\n')",
+                "firstLine": "@first(split(body('Get_blob_content'), '\n'))",
+                "lastLine": "@last(split(body('Get_blob_content'), '\n'))",
+                "hasFileHeader": "@startsWith(first(split(body('Get_blob_content'), '\n')), '1')",
+                "hasFileControl": "@startsWith(last(split(body('Get_blob_content'), '\n')), '9')",
+                "hasBatchHeader": "@or(startsWith(split(body('Get_blob_content'), '\n')[1], '5'), startsWith(split(body('Get_blob_content'), '\n')[2], '5'))",
+                "hasBatchControl": "@greater(indexOf(body('Get_blob_content'), concat('\n', '8')), -1)",
+                "recordCount": "@length(split(body('Get_blob_content'), '\n'))",
+                "minRecordsMet": "@greaterOrEquals(length(split(body('Get_blob_content'), '\n')), 4)"
+              }
+            }
+          },
+          "Check_validation_result": {
+            "runAfter": {
+              "Validate_ACH_File": [
+                "Succeeded"
+              ]
+            },
+            "type": "If",
+            "expression": {
+              "and": [
+                {
+                  "equals": [
+                    "@outputs('Validate_ACH_File')?['validations']?['hasFileHeader']",
+                    true
+                  ]
+                },
+                {
+                  "equals": [
+                    "@outputs('Validate_ACH_File')?['validations']?['hasFileControl']",
+                    true
+                  ]
+                },
+                {
+                  "equals": [
+                    "@outputs('Validate_ACH_File')?['validations']?['hasBatchHeader']",
+                    true
+                  ]
+                },
+                {
+                  "equals": [
+                    "@outputs('Validate_ACH_File')?['validations']?['hasBatchControl']",
+                    true
+                  ]
+                },
+                {
+                  "equals": [
+                    "@outputs('Validate_ACH_File')?['validations']?['minRecordsMet']",
+                    true
+                  ]
+                }
+              ]
+            },
+            "actions": {
+              "Copy_to_validated_container": {
+                "runAfter": {},
+                "type": "ApiConnection",
+                "inputs": {
+                  "host": {
+                    "connection": {
+                      "name": "@parameters('$connections')['azureblob']['connectionId']"
+                    }
+                  },
+                  "method": "post",
+                  "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                  "queries": {
+                    "folderPath": "/ach-validated",
+                    "name": "@items('For_each_blob')?['Name']",
+                    "queryParametersSingleEncoded": true
+                  },
+                  "body": "@body('Get_blob_content')"
+                }
+              },
+              "Delete_from_input_container": {
+                "runAfter": {
+                  "Copy_to_validated_container": [
+                    "Succeeded"
+                  ]
+                },
+                "type": "ApiConnection",
+                "inputs": {
+                  "host": {
+                    "connection": {
+                      "name": "@parameters('$connections')['azureblob']['connectionId']"
+                    }
+                  },
+                  "method": "delete",
+                  "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files/@{encodeURIComponent(encodeURIComponent(items('For_each_blob')?['Path']))}"
+                }
+              }
+            },
+            "else": {
+              "actions": {
+                "Copy_to_failed_container": {
+                  "runAfter": {},
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                      }
+                    },
+                    "method": "post",
+                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                    "queries": {
+                      "folderPath": "/ach-failed",
+                      "name": "@{items('For_each_blob')?['Name']}_failed",
+                      "queryParametersSingleEncoded": true
+                    },
+                    "body": "@body('Get_blob_content')"
+                  }
+                },
+                "Delete_from_input_container_failed": {
+                  "runAfter": {
+                    "Copy_to_failed_container": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                      }
+                    },
+                    "method": "delete",
+                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files/@{encodeURIComponent(encodeURIComponent(items('For_each_blob')?['Path']))}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "runAfter": {
+          "List_blobs_in_input_container": [
+            "Succeeded"
+          ]
+        },
+        "type": "Foreach"
+      }
+    }
+  }
+}

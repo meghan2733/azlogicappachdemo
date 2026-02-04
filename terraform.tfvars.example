@@ -1,0 +1,14 @@
+# Example Terraform Variables File
+# Copy this file to terraform.tfvars and update with your values
+
+resource_group_name  = "rg-ach-demo"
+location             = "eastus"
+storage_account_name = "stachfiledemo123"  # Must be globally unique
+logic_app_name       = "logic-ach-processor"
+
+tags = {
+  Environment = "Demo"
+  Purpose     = "ACH File Processing"
+  ManagedBy   = "Terraform"
+  Owner       = "Your Name"
+}
