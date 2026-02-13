@@ -14,12 +14,12 @@ provider "azurerm" {
 }
 
 # Resource Group
-# resource "azurerm_resource_group" "ach_demo" {
-#   name     = var.resource_group_name
-#   location = var.location
+resource "azurerm_resource_group" "rg-terraform-state" {
+  name     = var.resource_group_name
+  location = var.location
 
-#   tags = var.tags
-# }
+  tags = var.tags
+}
 
 # # Storage Account for ACH files
 # resource "azurerm_storage_account" "ach_storage" {
