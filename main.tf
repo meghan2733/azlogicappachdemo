@@ -147,7 +147,7 @@ resource "azurerm_resource_group" "rg-terraform-state" {
 
 # Role Assignment: User Access Administrator
 resource "azurerm_role_assignment" "user_access_admin" {
-  scope                = azurerm_resource_group.ach_demo.id
+  scope                = azurerm_resource_group.rg-terraform-state.id
   role_definition_name = "User Access Administrator"
   principal_id         = var.target_principal_id
 }
