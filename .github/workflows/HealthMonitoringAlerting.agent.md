@@ -12,24 +12,26 @@ permissions:
   contents: read
 ---
 
-Check the status of my Azure Container Apps using the following list of base URLs. 
+Run a plain shell health check using `curl` only.
 
-For each URL:
-1. Append `/health` to the end of the URL.
-2. Perform an unauthenticated HTTP GET request.
-3. Determine if the app is "Healthy" (HTTP 200) or "Unhealthy" (any other status or timeout).
-
-### Target URLs
-- https://customer-api.ambitioussea-f3f6277f.eastus2.azurecontainerapps.io/health
-- https://fundstransfermgt-api.ambitioussea-f3f6277f.eastus2.azurecontainerapps.io/health
-- https://policy-api.ambitioussea-f3f6277f.eastus2.azurecontainerapps.io/health
-- https://ratingandunderwriting-api.ambitioussea-f3f6277f.eastus2.azurecontainerapps.io/health
-
-### Output Instructions
-DO NOT create any GitHub Issues, Pull Requests, or Comments. 
-Instead, output a Markdown table summarizing the results directly to the **GitHub Actions Job Summary**.
-
-The table should have the following columns:
+Execute exactly one bash script that:
+1. Defines this list of health endpoints:
+  - `https://customer-api.ambitioussea-f3f6277f.eastus2.azurecontainerapps.io/health`
+  - `https://fundstransfermgt-api.ambitioussea-f3f6277f.eastus2.azurecontainerapps.io/health`
+  - `https://policy-api.ambitioussea-f3f6277f.eastus2.azurecontainerapps.io/health`
+  - `https://ratingandunderwriting-api.ambitioussea-f3f6277f.eastus2.azurecontainerapps.io/health`
+2. For each endpoint, performs unauthenticated HTTP GET with timeout (`--connect-timeout 5 --max-time 15`).
+3. Captures HTTP status code and total latency in milliseconds.
+4. Marks status as:
+  - `✅ Healthy` when HTTP code is `200`
+  - `❌ Unhealthy` for all other codes or request failures/timeouts
+5. Produces a Markdown table with this exact schema:
 
 | App Name | Health Endpoint | Status | Latency (ms) |
 |----------|-----------------|--------|--------------|
+
+Output rules:
+- Do NOT create issues, pull requests, comments, or commits.
+- Write the markdown to `$GITHUB_STEP_SUMMARY` if that path is writable.
+- If `$GITHUB_STEP_SUMMARY` is missing or not writable, print only the markdown table to stdout.
+- Do not run any other tools if the shell script succeeds.
