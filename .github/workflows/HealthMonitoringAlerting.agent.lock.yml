@@ -23,12 +23,12 @@
 #
 # Checks the health of specified Azure Container Apps and summarizes results.
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"80d11a9c1384638b1ff03ec32f4e4599e7acf55a7e1e106f16550ad2bdf1659c","compiler_version":"v0.53.4"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"4f39759f29c78fcee2c2a7ac0e67b58b32396451edb431dcb90846013ccae590","compiler_version":"v0.53.4"}
 
 name: "Azure Container Apps Health Check"
 "on":
   schedule:
-  - cron: "0 2 * * *"
+  - cron: "0 13 * * *"
   workflow_dispatch: {}
 
 permissions: {}

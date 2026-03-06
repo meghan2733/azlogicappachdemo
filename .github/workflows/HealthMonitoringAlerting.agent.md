@@ -1,10 +1,10 @@
 ---
 name: Azure Container Apps Health Check
 description: Checks the health of specified Azure Container Apps and summarizes results.
-# Schedule to run every morning at 9 AM UTC
+# Schedule to run every morning at 8 AM EST (13:00 UTC)
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 13 * * *'
   workflow_dispatch: {}
 
 # Agentic Workflows are read-only by default, perfect for your "no new items" rule.
