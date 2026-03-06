@@ -10,6 +10,11 @@ on:
 # Agentic Workflows are read-only by default, perfect for your "no new items" rule.
 permissions:
   contents: read
+
+network:
+  allowed:
+    - defaults
+    - "*.azurecontainerapps.io"
 ---
 
 Run a plain shell health check using `curl` only.
